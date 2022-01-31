@@ -1,0 +1,20 @@
+{
+  "name": "Documents",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/voice": "^0.8.0",
+    "bufferutil": "^4.0.6",
+    "discord-auditlog": "^1.9.4",
+    "discord.js": "^11.6.4",
+    "quick-db": "^1.0.5",
+    "utf-8-validate": "^5.0.8"
+  }
+}
