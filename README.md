@@ -1,21 +1,50 @@
-    const langSet = msg.client.provider.getGuild(msg.guild.id, 'language');
-    const lang = require(`../../languages/${langSet}.json`);
-    const args = msg.content.split(' ').slice(1);
+function checkDays(date) {
+  let now = new Date();
+  let diff = now.getTime() - date.getTime();
+  let days = Math.floor(diff / 86400000);
+  return days + (days == 1 ? " day" : " days") + " ago";
+};
+exports.run = async (client, message, args, customisation) => {
+  let user = message.mentions.users.first();
+  let muser = message.guild.member(message.mentions.users.first());
+  if(!message.mentions.users.first() && args.length > 0){
+    user = message.guild.member(args[0]).user
+    muser = message.guild.member(args[0]);
+  }
+  if (!muser) muser = message.member;
+  if(!user) user = message.author;
 
-    if (args.length < 1) return msg.channel.send(lang.eightball_noinput);
-    const eightballAnswers = [];
-    for (const x in lang) {
-      if (x.includes('eightball_answer')) {
-        eightballAnswers.push(lang[x]);
+  let status = ""
+  if(status === null) status = "No Game"
+  if(muser.presence.activities[0].type == 'CUSTOM_STATUS'){
+    let cstatus = muser.presence.activities[0].state
+    if(muser.presence.activities[0].emoji) {
+      if(muser.presence.activities[0].emoji.animated == true){
+        cstatus = `<a:${muser.presence.activities[0].emoji.name}:${muser.presence.activities[0].emoji.id}> ${cstatus}`
+      }
+      if(muser.presence.activities[0].emoji.animated !== true){
+        cstatus = `<:${muser.presence.activities[0].emoji.name}:${muser.presence.activities[0].emoji.id}>${cstatus}`
       }
     }
-    const eightballAnswersIndex = Math.floor(Math.random() * eightballAnswers.length);
-
-    const embed = new Discord.MessageEmbed()
-      .addField(lang.eightball_question, args.join(' '))
-      .addField(lang.eightball_embedfield, eightballAnswers[eightballAnswersIndex])
-      .setColor('#ff6666')
-      .setAuthor(msg.author.tag, msg.author.displayAvatarURL());
-
-    return msg.channel.send({ embed });
+    status = `Custom Status:\n${cstatus}\nApp:\n${muser.presence.activities[1].name}`
+  }else{
+    status = `${muser.presence.activities[0].type.toLowerCase()}: ${muser.presence.activities[0].name}`
   }
+
+  const embed = new Discord.MessageEmbed();
+  embed.addField("Username", `${user.username}#${user.discriminator}`, true)
+          .addField("ID", `${user.id}`, true)
+          .setColor(3447003)
+          .setThumbnail(`${user.avatarURL()}`)
+          .setTimestamp()
+          .setURL(`${user.avatarURL()}`)
+          .addField('Currently', `${muser.presence.status.toUpperCase()}`, true)
+          .addField('Game', status, true)
+          .addField('Joined Discord', `${moment(user.createdAt).toString().substr(0, 15)}\n(${moment(user.createdAt).fromNow()})`, true)
+          .addField('Joined Server', `${moment(muser.joinedAt).toString().substr(0, 15)}\n(${moment(muser.joinedAt).fromNow()})`, true)
+          .addField('Roles', `${muser.roles.cache.array()}`, true)
+          .addField('Is Bot', `${user.bot.toString().toUpperCase()}`, true)
+	  .addField('Is Bot Owner', `${(customisation.ownerid === user.id).toString().toUpperCase()}`, true)
+          .setFooter(`© Cryptonix X Mod Bot by ${customisation.ownername}`);
+      message.channel.send({embed});
+}
