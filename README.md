@@ -1,50 +1,32 @@
-function checkDays(date) {
-  let now = new Date();
-  let diff = now.getTime() - date.getTime();
-  let days = Math.floor(diff / 86400000);
-  return days + (days == 1 ? " day" : " days") + " ago";
-};
-exports.run = async (client, message, args, customisation) => {
-  let user = message.mentions.users.first();
-  let muser = message.guild.member(message.mentions.users.first());
-  if(!message.mentions.users.first() && args.length > 0){
-    user = message.guild.member(args[0]).user
-    muser = message.guild.member(args[0]);
-  }
-  if (!muser) muser = message.member;
-  if(!user) user = message.author;
+    const Role1 = message.guild.roles.cache.get("RoleID");
 
-  let status = ""
-  if(status === null) status = "No Game"
-  if(muser.presence.activities[0].type == 'CUSTOM_STATUS'){
-    let cstatus = muser.presence.activities[0].state
-    if(muser.presence.activities[0].emoji) {
-      if(muser.presence.activities[0].emoji.animated == true){
-        cstatus = `<a:${muser.presence.activities[0].emoji.name}:${muser.presence.activities[0].emoji.id}> ${cstatus}`
-      }
-      if(muser.presence.activities[0].emoji.animated !== true){
-        cstatus = `<:${muser.presence.activities[0].emoji.name}:${muser.presence.activities[0].emoji.id}>${cstatus}`
-      }
-    }
-    status = `Custom Status:\n${cstatus}\nApp:\n${muser.presence.activities[1].name}`
-  }else{
-    status = `${muser.presence.activities[0].type.toLowerCase()}: ${muser.presence.activities[0].name}`
-  }
+    // Creating a filter.
+    const Filter = (reaction, user) => user.id == message.author.id;
 
-  const embed = new Discord.MessageEmbed();
-  embed.addField("Username", `${user.username}#${user.discriminator}`, true)
-          .addField("ID", `${user.id}`, true)
-          .setColor(3447003)
-          .setThumbnail(`${user.avatarURL()}`)
-          .setTimestamp()
-          .setURL(`${user.avatarURL()}`)
-          .addField('Currently', `${muser.presence.status.toUpperCase()}`, true)
-          .addField('Game', status, true)
-          .addField('Joined Discord', `${moment(user.createdAt).toString().substr(0, 15)}\n(${moment(user.createdAt).fromNow()})`, true)
-          .addField('Joined Server', `${moment(muser.joinedAt).toString().substr(0, 15)}\n(${moment(muser.joinedAt).fromNow()})`, true)
-          .addField('Roles', `${muser.roles.cache.array()}`, true)
-          .addField('Is Bot', `${user.bot.toString().toUpperCase()}`, true)
-	  .addField('Is Bot Owner', `${(customisation.ownerid === user.id).toString().toUpperCase()}`, true)
-          .setFooter(`© Cryptonix X Mod Bot by ${customisation.ownername}`);
-      message.channel.send({embed});
-}
+    // Creating the embed message.
+    const Embed = new discord.MessageEmbed()
+        .setDescription(`Choose a role: ${Role1.name}`)
+    
+    // Awaiting for the embed message to be sent.
+    const reactionMessage = await message.channel.send(Embed);
+
+    // Reacting to the embed message.
+    await reactionMessage.react("😎");
+
+    // Awaiting a reaction to the embed message. Time is measured in ms. (30000 ms - 30 seconds)
+    reactionMessage.awaitReactions(Filter, {max: 1, time: 30000, errors: ["time"]}).then(collected => {
+        // Getting the first reaction in the collection.
+        const reaction = collected.first();
+        
+        // Creating a switch statement for reaction.emoji.name.
+        switch (reaction.emoji.name) {
+            case "😎":
+                // Checking if the member already has the role.
+                if (message.member.roles.cache.has(Role1.id)) {return message.channel.send("You already have the role.")};
+                // Adding the role.
+                message.member.roles.add(Role1).then(message.channel.send("Role added!"));
+                // Breaking the switch statement to make sure no other cases are executed.
+                break
+        }
+    })
+});
